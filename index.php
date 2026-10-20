@@ -59,11 +59,15 @@ abstract class Account{
         return $this->owner . "(". $this->number ."): " . $this->balance . " " . self::CURRENCY; 
     }
 
+    public function __toString():string{
+        return $this->getSummary();
+    }
+
     final public function describe():string{
         return get_class($this). ": " . $this->getSummary();
     }
 
-
+    
 
 
     public function __destruct(){
@@ -92,15 +96,52 @@ class SavingsAccount extends Account{
     }
 }
 
-class CheckingAccount extends Account{
+class CheckingAccount extends Account implements Payable{
     private const MONTHLY_FEE = 2.5;
     public function monthlyUpdate(): void{
-    $this->balance -= max(0.0 ,$this->balance - self::MONTHLY_FEE);
+    $this->balance = max(0.0 ,$this->balance - self::MONTHLY_FEE);
+    }
+    public function pay(float $amount, string $merchant): bool {
+        try {
+            $this->withdraw($amount);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }
 
+
+interface Payable{
+    function pay(float $amount, string $merchant): bool;
+}
+
+
+//? Account array   
 $sara = new SavingsAccount(0.03, "Sara", 100.0, "ACC-1");
-echo $sara->getSummary() . "\n";
+$asem = new CheckingAccount("Asem", 924.23, "ACC-2");
+$eli = new CheckingAccount("Eli", 23.99, "ACC-3");
+$ahmad = new SavingsAccount(0.05, "Ahmad", 74560.23, "ACC-4");
+$accArray = [$sara, $asem, $eli, $ahmad];
+
+// echo "\n";
+// for ($i = 0; $i <= 3; $i++) {
+//     if($accArray[$i] instanceof Payable){
+//     echo $accArray[$i]->pay(10.0, "Cofee");
+//     echo $accArray[$i]->getOwner() . " Paid";
+//     }
+//     else {echo $accArray[$i]->getOwner() . " Cannot Paid";
+// }}
+
+
+function printReport(Account ...$accArray):void{
+    foreach ($accArray as $acc) {
+        echo $acc . "\n";  
+        }
+}
+
+printReport($sara, $asem, $eli, $ahmad);
+// echo $sara->getSummary() . "\n";
 
 
 
